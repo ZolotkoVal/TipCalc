@@ -45,6 +45,7 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
 
     var orderAmount by remember { mutableStateOf("") }
     var dishCount by remember { mutableStateOf("") }
+    var tipPercent by remember { mutableStateOf(0f) }
 
     Column(
 
@@ -108,12 +109,20 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         // Ползунок чаевых
         Text(text = "Чаевые:")
 
+
         Slider(
-            value = 0f,
-            onValueChange = {},
+            value = tipPercent,
+            onValueChange = { newValue ->
+                tipPercent = newValue
+            },
             valueRange = 0f..25f,
             steps = 4
         )
+
+        Text(
+            text = "Выбрано чаевых: ${tipPercent.toInt()}%"
+        )
+
 
         Row(
             modifier = Modifier.fillMaxWidth(),
