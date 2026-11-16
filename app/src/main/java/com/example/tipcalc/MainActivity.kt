@@ -13,6 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.tipcalc.ui.theme.TipCalcTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,7 +42,12 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun TipCalcScreen(modifier: Modifier = Modifier) {
+
+    var orderAmount by remember { mutableStateOf("") }
+    var dishCount by remember { mutableStateOf("") }
+
     Column(
+
         modifier = modifier
             .fillMaxSize()
             .padding(20.dp),
@@ -47,12 +59,24 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
                 text = "Сумма заказа:",
                 modifier = Modifier.width(140.dp)
             )
+
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = orderAmount,
+                onValueChange = { newValue ->
+                    if (newValue.isEmpty() ||
+                        newValue.matches(Regex("""\d*([.,]\d{0,2})?"""))
+                    ) {
+                        orderAmount = newValue
+                    }
+                },
                 modifier = Modifier.weight(1f),
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal
+                ),
+                placeholder = { Text("0.00") }
             )
+
         }
 
         // Количество блюд
@@ -61,12 +85,22 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
                 text = "Количество блюд:",
                 modifier = Modifier.width(140.dp)
             )
+
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = dishCount,
+                onValueChange = { newValue ->
+                    if (newValue.all { it.isDigit() }) {
+                        dishCount = newValue
+                    }
+                },
                 modifier = Modifier.weight(1f),
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                ),
+                placeholder = { Text("0") }
             )
+
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -90,11 +124,13 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         }
 
         // Группа скидок
+        Text(text = "Скидка:")
+
         Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Скидка:")
-
             listOf(3, 5, 7, 10).forEach { percent ->
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -103,7 +139,7 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
                         selected = percent == 3,
                         onClick = null
                     )
-                    Text("$percent%")
+                    Text(text = "$percent%")
                 }
             }
         }
