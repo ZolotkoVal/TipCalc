@@ -19,6 +19,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import java.util.Locale
+
 
 
 class MainActivity : ComponentActivity() {
@@ -46,6 +50,8 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
     var orderAmount by remember { mutableStateOf("") }
     var dishCount by remember { mutableStateOf("") }
     var tipPercent by remember { mutableStateOf(0f) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
 
@@ -110,14 +116,32 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         Text(text = "Чаевые:")
 
 
+
         Slider(
             value = tipPercent,
             onValueChange = { newValue ->
                 tipPercent = newValue
             },
             valueRange = 0f..25f,
-            steps = 4
+            steps = 4,
+            onValueChangeFinished = {
+                val tipAmount = calculateTip(orderAmount, tipPercent)
+
+                val formattedTip = String.format(
+                    Locale.forLanguageTag("ru-RU"),
+                    "%.2f",
+                    tipAmount
+                )
+
+                coroutineScope.launch {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar(
+                        message = "Сумма чаевых: $formattedTip ₽"
+                    )
+                }
+            }
         )
+
 
         Text(
             text = "Выбрано чаевых: ${tipPercent.toInt()}%"
@@ -159,7 +183,23 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         Button(onClick = {}) {
             Text("Итого")
         }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        SnackbarHost(
+            hostState = snackbarHostState
+        )
+
     }
+}
+
+
+fun calculateTip(amountText: String, tipPercent: Float): Double {
+    val amount = amountText
+        .replace(',', '.')
+        .toDoubleOrNull() ?: 0.0
+
+    return amount.coerceAtLeast(0.0) * tipPercent / 100.0
 }
 
 @Preview(
@@ -172,3 +212,4 @@ fun TipCalcPreview() {
         TipCalcScreen()
     }
 }
+
