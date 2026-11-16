@@ -50,6 +50,9 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
     var orderAmount by remember { mutableStateOf("") }
     var dishCount by remember { mutableStateOf("") }
     var tipPercent by remember { mutableStateOf(0f) }
+    var showTotal by remember(orderAmount, dishCount, tipPercent) {
+        mutableStateOf(false)
+    }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val discountPercent = calculateDiscountPercent(dishCount)
@@ -57,6 +60,13 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         orderAmount,
         discountPercent
     )
+
+    val totalAmount = calculateTotal(
+        orderAmount,
+        tipPercent,
+        discountPercent
+    )
+
 
     Column(
 
@@ -184,20 +194,33 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
 
         // Результат
 
+
+        val resultAmount = if (showTotal) totalAmount else discountAmount
+
+        val resultLabel = if (showTotal) {
+            "Итого"
+        } else {
+            "Сумма скидки"
+        }
+
         Text(
-            text = "Сумма скидки: ${
+            text = "$resultLabel: ${
                 String.format(
                     Locale.forLanguageTag("ru-RU"),
                     "%.2f",
-                    discountAmount
+                    resultAmount
                 )
             } ₽"
         )
 
-
-        Button(onClick = {}) {
+        Button(
+            onClick = {
+                showTotal = true
+            }
+        ) {
             Text("Итого")
         }
+
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -239,6 +262,23 @@ fun calculateDiscount(
 
     return amount.coerceAtLeast(0.0) * discountPercent / 100.0
 }
+
+fun calculateTotal(
+    amountText: String,
+    tipPercent: Float,
+    discountPercent: Int
+): Double {
+    val amount = amountText
+        .replace(',', '.')
+        .toDoubleOrNull()
+        ?.coerceAtLeast(0.0) ?: 0.0
+
+    val tip = calculateTip(amountText, tipPercent)
+    val discount = calculateDiscount(amountText, discountPercent)
+
+    return amount + tip - discount
+}
+
 
 @Preview(
     showBackground = true,
