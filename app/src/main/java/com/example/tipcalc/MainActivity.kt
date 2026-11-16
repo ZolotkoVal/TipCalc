@@ -52,6 +52,11 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
     var tipPercent by remember { mutableStateOf(0f) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val discountPercent = calculateDiscountPercent(dishCount)
+    val discountAmount = calculateDiscount(
+        orderAmount,
+        discountPercent
+    )
 
     Column(
 
@@ -169,7 +174,7 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     RadioButton(
-                        selected = percent == 3,
+                        selected = percent == discountPercent,
                         onClick = null
                     )
                     Text(text = "$percent%")
@@ -178,7 +183,17 @@ fun TipCalcScreen(modifier: Modifier = Modifier) {
         }
 
         // Результат
-        Text("Сумма скидки: —")
+
+        Text(
+            text = "Сумма скидки: ${
+                String.format(
+                    Locale.forLanguageTag("ru-RU"),
+                    "%.2f",
+                    discountAmount
+                )
+            } ₽"
+        )
+
 
         Button(onClick = {}) {
             Text("Итого")
@@ -200,6 +215,29 @@ fun calculateTip(amountText: String, tipPercent: Float): Double {
         .toDoubleOrNull() ?: 0.0
 
     return amount.coerceAtLeast(0.0) * tipPercent / 100.0
+}
+
+fun calculateDiscountPercent(dishCountText: String): Int {
+    val count = dishCountText.toIntOrNull() ?: 0
+
+    return when (count) {
+        in 1..2 -> 3
+        in 3..5 -> 5
+        in 6..10 -> 7
+        in 11..Int.MAX_VALUE -> 10
+        else -> 0
+    }
+}
+
+fun calculateDiscount(
+    amountText: String,
+    discountPercent: Int
+): Double {
+    val amount = amountText
+        .replace(',', '.')
+        .toDoubleOrNull() ?: 0.0
+
+    return amount.coerceAtLeast(0.0) * discountPercent / 100.0
 }
 
 @Preview(
